@@ -4,6 +4,7 @@ open Asttypes
 open Parsetree
 open Longident
 
+(* START memoize fibonacci *)
 let hashtblCreate = Exp.ident ({ txt = Ldot (Lident "Hashtbl", "create"); loc=(!default_loc)})
 let argsCreate = [(Nolabel, Exp.constant (Pconst_integer ("15", None)))]
 
@@ -94,7 +95,14 @@ let fibonacci = Str.value Recursive [Vb.mk fibPat letcachein]
 let memoize_fibonacci functionName = Str.value Recursive 
                       [Vb.mk (Pat.var {txt = functionName; loc=(!default_loc)}) 
                       letcachein]
+(* END memoize fibonacci *)
 
+(* START evaluate expression*)
+let rec evaluateExpression functionName = function
+  | {pexp_desc = Pexp_function(caseList); pexp_attributes = att; pexp_loc = loc } -> 1
+  | x -> 0
+
+(* END evaluate expression*)
 let rec str_item_mapper mapper str = 
    begin match str with
       | { pstr_desc =

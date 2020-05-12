@@ -1,0 +1,5 @@
+"Rule: ocaml: ml & cmi -> cmx & o (%=result )": "\236/315\001\219\246\n\155\221@O\168\245\161"
+"Rule: ocaml dependencies ml (%=result )": ".,\127\016\127\030\175h\197\003\155\212\254\028F\242"
+"Resource: /Users/diogo/MIEI-FCT/5\194\186Ano/1\194\186 Semestre/Preparac\204\167a\204\131o de Dissertac\204\167a\204\131o/PPX/Memo/Results/result.ml": "\227\175j\216WS\004\1494\221\031\\G!\022F"
+"Rule: ocaml: cmx* & o* -> native (%=result )": "V\145\245p\231\011V\179\242]\211\167\144\193U8"
+"Rule: ocaml: ml -> cmo & cmi (%=result )": "6\136p\128\191\030\002\185\182\005\205\181\004\183\158\215"

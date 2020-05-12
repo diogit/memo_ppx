@@ -1,5 +1,5 @@
 let rec fib =
-  let cache = Hashtbl.create 5 in
+  let cache = Hashtbl.create 15 in
   function n ->
   match n with
   | 0 | 1 -> 1
