@@ -1,6 +1,6 @@
 # Nome de ficheiros
-NATIVE = unwindPPX
-FILE = Tests/testunwind
+NATIVE = memoPPX
+FILE = Tests/test
 DUMP = AST
 RESULT = Results/result
 
