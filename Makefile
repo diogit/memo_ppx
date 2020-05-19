@@ -1,6 +1,6 @@
 # Nome de ficheiros
-NATIVE = memoPPX
-FILE = Tests/test
+NATIVE = memo123PPX
+FILE = Tests/test123
 DUMP = AST
 RESULT = Results/result
 
