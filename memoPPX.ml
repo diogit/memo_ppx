@@ -15,11 +15,18 @@ let rec constructList l =
 let applyHash args = Exp.apply (Exp.ident {txt = Lident "hash"; loc=(!default_loc)})
   [(Nolabel, constructList args)]
 
+let isSingleArg args = if List.length args = 1 then true else false
+
+let writeCacheArgs args =
+  if isSingleArg args
+  then Exp.ident {txt = Lident (List.hd args); loc=(!default_loc)}
+  else applyHash args
+
 let seq args = Exp.sequence
   (Exp.apply
     (Exp.ident ({ txt = Ldot (Lident "Hashtbl", "add"); loc=(!default_loc)}))
     [(Nolabel, Exp.ident {txt = Lident "cache"; loc=(!default_loc)});
-     (Nolabel, applyHash args);
+     (Nolabel, writeCacheArgs args);
      (Nolabel, Exp.ident {txt = Lident "y"; loc=(!default_loc)})]
   )
   (Exp.ident {txt = Lident "y"; loc=(!default_loc)})
@@ -40,7 +47,7 @@ let withCase expression args =
 let cacheFind args = Exp.apply
   (Exp.ident ({ txt = Ldot (Lident "Hashtbl", "find"); loc=(!default_loc)}))
   [(Nolabel, Exp.ident {txt = Lident "cache"; loc=(!default_loc)});
-   (Nolabel, applyHash args)]
+   (Nolabel, writeCacheArgs args)]
 
 let tryExp expression args = Exp.try_ (cacheFind args) [(withCase expression args)]
 
@@ -92,9 +99,12 @@ let cacheCreate = Vb.mk (Pat.var {txt = "cache"; loc=(!default_loc)})
     [(Nolabel, Exp.constant (Pconst_integer ("15", None)))]
   )
 
-let memoExp funName expression args = Exp.let_ Nonrecursive [cacheCreate] (hash funName expression args)
+let memoExp funName expression args = Exp.let_ Nonrecursive [cacheCreate]
+  (if isSingleArg args
+  then g funName expression args
+  else hash funName expression args)
 
-let fix_memo funName expression args = Str.value Nonrecursive [Vb.mk (Pat.var {txt = funName^"_memo"; loc=(!default_loc)}) (memoExp funName expression args)]
+let fix_memo funName expression args = Str.value Nonrecursive [Vb.mk (Pat.var {txt = funName^""; loc=(!default_loc)}) (memoExp funName expression args)]
 
 let rec getFuncBody functionName expr l =
   match expr with

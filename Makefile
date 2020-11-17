@@ -1,8 +1,8 @@
 # Nome de ficheiros
-NATIVE = memo123PPX
-FILE = Tests/test123
+NATIVE = memoPPX
+FILE = Tests/error1
 DUMP = AST
-RESULT = Results/result
+RESULT = Results/resultfib
 
 # Comandos
 clean = rm -r -f _build *.native $(RESULT)* $(DUMP).ml
