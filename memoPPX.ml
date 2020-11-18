@@ -19,18 +19,18 @@ let isSingleArg args = if List.length args = 1 then true else false
 let writeCacheArgs args =
   if isSingleArg args
   then Exp.ident {txt = Lident (List.hd args); loc=(!default_loc)}
-  else constructTuple args
+  else Exp.ident {txt = Lident "arg"; loc=(!default_loc)}
 
 let seq args = Exp.sequence
   (Exp.apply
     (Exp.ident ({ txt = Ldot (Lident "Hashtbl", "add"); loc=(!default_loc)}))
     [(Nolabel, Exp.ident {txt = Lident "cache"; loc=(!default_loc)});
      (Nolabel, writeCacheArgs args);
-     (Nolabel, Exp.ident {txt = Lident "y"; loc=(!default_loc)})]
+     (Nolabel, Exp.ident {txt = Lident "res"; loc=(!default_loc)})]
   )
-  (Exp.ident {txt = Lident "y"; loc=(!default_loc)})
+  (Exp.ident {txt = Lident "res"; loc=(!default_loc)})
 
-let letyBinding expression = Vb.mk (Pat.var {txt = "y"; loc=(!default_loc)})
+let letyBinding expression = Vb.mk (Pat.var {txt = "res"; loc=(!default_loc)})
   (expression)
 
 let matchRight expression args = Exp.let_ Nonrecursive [(letyBinding expression)] (seq args)  
@@ -53,7 +53,11 @@ let tryExp expression args = Exp.try_ (cacheFind args) [(withCase expression arg
 let rec gExp expression args =
   let keepArgs = args in
   let rec writeArgs = function
-  | [] -> (tryExp expression keepArgs)
+  | [] -> begin
+            if isSingleArg args
+            then tryExp expression keepArgs
+            else Exp.let_ Nonrecursive [(Vb.mk (Pat.var {txt = "arg"; loc=(!default_loc)}) (constructTuple args))] (tryExp expression keepArgs)
+          end
   | x::xs -> Exp.fun_ Nolabel None ((Pat.var {txt = x; loc=(!default_loc)})) (writeArgs xs)
   in writeArgs args
 
