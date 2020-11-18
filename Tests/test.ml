@@ -10,6 +10,13 @@ let %memo rec lucas n b1 b2=
 
 let %memo rec fact n = if n = 1 then 1 else n * fact(n - 1)
 
+
+let %memo rec ackerman m n=
+    match m, n with
+      | 0, n -> n + 1
+      | m, 0 -> ackerman (m - 1) 1
+      | m, n -> ackerman (m - 1) (ackerman m (n - 1))
+
 (* let rec p = function [] -> () | x::xs -> (Format.printf "%i;" x); (p xs)
 
 let rec pk l =

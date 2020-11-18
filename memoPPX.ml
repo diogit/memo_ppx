@@ -7,20 +7,19 @@ open Longident
 (* DEBUG *)
 let rec p = function [] -> Format.printf "[]" | x::xs -> (Format.printf "%s;" x); p xs
 
-let rec constructList l =
-  match l with
-  | [] -> Exp.construct ({txt = Lident "[]"; loc=(!default_loc)}) None
-  | x::xs -> Exp.construct ({txt = Lident "::"; loc=(!default_loc)}) (Some(Exp.tuple [Exp.ident {txt = Lident x; loc=(!default_loc)}; constructList xs]))
-
-let applyHash args = Exp.apply (Exp.ident {txt = Lident "hash"; loc=(!default_loc)})
-  [(Nolabel, constructList args)]
+let constructTuple l =
+  let rec constructList l =
+    match l with
+    | [] -> []
+    | x::xs -> (Exp.construct ({txt = Lident x; loc=(!default_loc)}) None) :: (constructList xs)
+  in Exp.tuple (constructList l)
 
 let isSingleArg args = if List.length args = 1 then true else false
 
 let writeCacheArgs args =
   if isSingleArg args
   then Exp.ident {txt = Lident (List.hd args); loc=(!default_loc)}
-  else applyHash args
+  else constructTuple args
 
 let seq args = Exp.sequence
   (Exp.apply
@@ -61,48 +60,13 @@ let rec gExp expression args =
 let g funName expression args = Exp.let_ Recursive
   [Vb.mk (Pat.var {txt = funName; loc=(!default_loc)}) (gExp expression args)] (Exp.ident {txt = Lident funName; loc=(!default_loc)})
 
-let recRight =
-  Exp.apply
-    (Exp.ident {txt = Lident "^"; loc=(!default_loc)})
-    [Nolabel,
-      (Exp.apply
-        (Exp.ident {txt = Lident "string_of_int"; loc=(!default_loc)})
-        [Nolabel, Exp.ident {txt = Lident "x"; loc=(!default_loc)}]);
-    (Nolabel,
-      (Exp.apply (Exp.ident {txt = Lident "hash"; loc=(!default_loc)})
-      [Nolabel, Exp.ident {txt = Lident "xs"; loc=(!default_loc)}]))
-    ]
-
-let hashRec =
-  {
-    pc_lhs = Pat.construct ({txt = Lident "::"; loc=(!default_loc)})
-    (Some(Pat.tuple [
-      (Pat.var {txt = "x"; loc=(!default_loc)});
-      (Pat.var {txt = "xs"; loc=(!default_loc)})
-    ]));
-  	pc_guard = None;
-  	pc_rhs = recRight
-  }
-
-let hashBase =
-  {
-    pc_lhs = Pat.construct {txt = Lident "[]"; loc=(!default_loc)} None; 
-  	pc_guard = None;
-  	pc_rhs = Exp.constant (Pconst_string ("", None))
-  }
-
-let hash funName expression args = Exp.let_ Recursive [(Vb.mk (Pat.var {txt = "hash"; loc=(!default_loc)}) (Exp.function_ [hashBase; hashRec]))] (g funName expression args)
-
 let cacheCreate = Vb.mk (Pat.var {txt = "cache"; loc=(!default_loc)})
   (Exp.apply
     (Exp.ident ({ txt = Ldot (Lident "Hashtbl", "create"); loc=(!default_loc)}))
-    [(Nolabel, Exp.constant (Pconst_integer ("15", None)))]
+    [(Nolabel, Exp.constant (Pconst_integer ("16", None)))]
   )
 
-let memoExp funName expression args = Exp.let_ Nonrecursive [cacheCreate]
-  (if isSingleArg args
-  then g funName expression args
-  else hash funName expression args)
+let memoExp funName expression args = Exp.let_ Nonrecursive [cacheCreate] (g funName expression args)
 
 let fix_memo funName expression args = Str.value Nonrecursive [Vb.mk (Pat.var {txt = funName^""; loc=(!default_loc)}) (memoExp funName expression args)]
 
