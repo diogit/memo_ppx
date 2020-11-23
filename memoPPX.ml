@@ -61,7 +61,7 @@ let rec gExp expression args =
   | x::xs -> Exp.fun_ Nolabel None ((Pat.var {txt = x; loc=(!default_loc)})) (writeArgs xs)
   in writeArgs args
 
-let g funName expression args = Exp.let_ Recursive
+let g rec_flag funName expression args = Exp.let_ rec_flag
   [Vb.mk (Pat.var {txt = funName; loc=(!default_loc)}) (gExp expression args)] (Exp.ident {txt = Lident funName; loc=(!default_loc)})
 
 let cacheCreate = Vb.mk (Pat.var {txt = "cache"; loc=(!default_loc)})
@@ -70,18 +70,18 @@ let cacheCreate = Vb.mk (Pat.var {txt = "cache"; loc=(!default_loc)})
     [(Nolabel, Exp.constant (Pconst_integer ("16", None)))]
   )
 
-let memoExp funName expression args = Exp.let_ Nonrecursive [cacheCreate] (g funName expression args)
+let memoExp rec_flag funName expression args = Exp.let_ Nonrecursive [cacheCreate] (g rec_flag funName expression args)
 
-let fix_memo funName expression args = Str.value Nonrecursive [Vb.mk (Pat.var {txt = funName^""; loc=(!default_loc)}) (memoExp funName expression args)]
+let fix_memo rec_flag funName expression args = Str.value Nonrecursive [Vb.mk (Pat.var {txt = funName^""; loc=(!default_loc)}) (memoExp rec_flag funName expression args)]
 
-let rec getFuncBody functionName expr l =
+let rec getFuncBody rec_flag functionName expr l =
   match expr with
   | {pexp_desc = pexp;_} -> 
     begin
     match pexp with
     | Pexp_fun (Nolabel, None, {ppat_desc = Ppat_var {txt = arg;_};_}, body) -> 
-      getFuncBody functionName body (arg::l)
-    | _ -> fix_memo functionName expr (List.rev l)
+      getFuncBody rec_flag functionName body (arg::l)
+    | _ -> fix_memo rec_flag functionName expr (List.rev l)
     end
 
 let rec str_item_mapper mapper str = 
@@ -91,10 +91,10 @@ let rec str_item_mapper mapper str =
           begin 
             match pstr with
             | PStr [{ pstr_desc =
-                    Pstr_value (Recursive,
+                    Pstr_value (rec_flag,
                     [{
                       pvb_pat = {ppat_desc = Ppat_var {txt = functionName;_};_}; pvb_expr = expression;_
-                      }]); _}] -> str_item_mapper mapper (getFuncBody functionName expression [])
+                      }]); _}] -> str_item_mapper mapper (getFuncBody rec_flag functionName expression [])
             | _ -> raise (Location.Error (Location.error ~loc "Syntax error in expression mapper"))                       
           end
       (* Delegate to the default mapper. *)
