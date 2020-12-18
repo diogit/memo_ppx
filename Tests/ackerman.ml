@@ -1,4 +1,4 @@
-let %memo rec ackerman m n=
+let %memo rec ackerman m n =
     match m, n with
       | 0, n -> n + 1
       | m, 0 -> ackerman (m - 1) 1

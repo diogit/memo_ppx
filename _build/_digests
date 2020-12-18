@@ -1,5 +1,0 @@
-"Rule: ocaml: ml -> cmo & cmi (%=memoPPX )": "\143Q\166\168P\208\134]\136\209-v\199Cc\246"
-"Rule: ocaml: cmx* & o* -> native (%=memoPPX )": "U\018\168)\234lWsS\157\224D\164iy@"
-"Resource: /Users/diogo/MIEI-FCT/5\194\186Ano/2\194\186 Semestre/Elaborac\204\167a\204\131o Dissertac\204\167a\204\131o/PPX/Memo/memoPPX.ml": "\143(\220w\011\145\181\1428eE\015\149$\222\134"
-"Rule: ocaml: ml & cmi -> cmx & o (%=memoPPX )": "p\030\157\199g \245\250p\189qX\143\245\186)"
-"Rule: ocaml dependencies ml (%=memoPPX )": "\217\186N\182Q\247/\173\160\135\201\030'\215c\030"

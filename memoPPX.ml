@@ -78,9 +78,7 @@ let cacheCreate = Vb.mk (Pat.var {txt = "cache"; loc=(!default_loc)})
 
 let memoExp rec_flag funName expression args = Exp.let_ Nonrecursive [cacheCreate] (g rec_flag funName expression args)
 
-let fix_memo rec_flag funName expression args = Str.value Nonrecursive [Vb.mk (Pat.var {txt = funName; loc=(!default_loc)}) (memoExp rec_flag funName expression args); (* other functions go here *)]
-
-let fix_memo2 rec_flag funcList = 
+let fix_memo rec_flag funcList = 
   let rec writeFuncs funcList =
     match funcList with
     | [] -> []
@@ -91,30 +89,22 @@ let fix_memo2 rec_flag funcList =
      else Nonrecursive)
      (writeFuncs funcList)
 
-(* has to be called for every function *)
-let rec getFuncBody rec_flag functionName expr l =
-  match expr with
-  | {pexp_desc = pexp;_} -> 
-    begin
-    match pexp with
-    | Pexp_fun (Nolabel, None, {ppat_desc = Ppat_var {txt = arg;_};_}, body) -> 
-      getFuncBody rec_flag functionName body (arg::l)
-    | _ -> fix_memo rec_flag functionName expr (List.rev l)
-    end
-
 let rec getFuncArgsAndBody functionName args expr =
   match expr with
   | {pexp_desc = pexp;_} -> 
     begin
       match pexp with
       | Pexp_fun (Nolabel, None, {ppat_desc = Ppat_var {txt = arg;_};_}, body) -> getFuncArgsAndBody functionName (arg::args) body
-      | _ -> Func(functionName, (List.rev args), expr)
+      | _ -> if List.length args = 0
+             then raise (Location.Error (Location.error ("The function "^functionName^" must have at least one argument!")))
+             else Func(functionName, (List.rev args), expr)
     end
 
-let rec name functions =    
+let rec createFunc functions =    
   match functions with
   | [] -> []
-  | {pvb_pat = {ppat_desc = Ppat_var {txt = functionName;_};_}; pvb_expr = expression;_}::xs -> (getFuncArgsAndBody functionName [] expression)::(name xs)
+  | {pvb_pat = {ppat_desc = Ppat_var {txt = functionName;_};_}; pvb_expr = expression;_}::xs -> (getFuncArgsAndBody functionName [] expression)::(createFunc xs)
+  | {pvb_pat = {ppat_desc = (Ppat_any | Ppat_alias (_, _) | Ppat_constant _| Ppat_interval (_, _) | Ppat_tuple _ | Ppat_construct (_, _) | Ppat_variant (_, _) | Ppat_record (_, _) | Ppat_array _| Ppat_or (_, _) | Ppat_constraint (_, _) | Ppat_type _ | Ppat_lazy _ | Ppat_unpack _ | Ppat_exception _ | Ppat_extension _ | Ppat_open (_, _)); _ }; _ }::_ -> raise (Location.Error (Location.error "Syntax error in expression mapper"))
 
 let rec str_item_mapper mapper str = 
    begin match str with
@@ -124,7 +114,10 @@ let rec str_item_mapper mapper str =
             match pstr with
             | PStr [{ pstr_desc =
                     Pstr_value (rec_flag,
-                    l); _}] -> fix_memo2 rec_flag (name l)
+                    l); _}] -> fix_memo rec_flag (createFunc l)
+            | PStr [{ pstr_desc =
+                    Pstr_eval ({pexp_desc =
+                      Pexp_let (rec_flag, l, exp); _}, _) ; _}] -> fix_memo rec_flag (createFunc l)
             | _ -> raise (Location.Error (Location.error ~loc "Syntax error in expression mapper"))                       
           end
       (* Delegate to the default mapper. *)
