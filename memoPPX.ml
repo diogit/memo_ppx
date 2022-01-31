@@ -73,7 +73,7 @@ let g rec_flag funName expression args =
 let cacheCreate = Vb.mk (Pat.var {txt = "cache"; loc=(!default_loc)})
   (Exp.apply
     (Exp.ident ({ txt = Ldot (Lident "Hashtbl", "create"); loc=(!default_loc)}))
-    [(Nolabel, Exp.constant (Pconst_integer ("16", None)))]
+    [(Nolabel, Exp.constant (Pconst_integer ("17", None)))]
   )
 
 let memoExp rec_flag funName expression args = Exp.let_ Nonrecursive [cacheCreate] (g rec_flag funName expression args)
